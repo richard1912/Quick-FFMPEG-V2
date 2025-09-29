@@ -1,0 +1,317 @@
+openapi: 3.0.3
+info:
+  title: Quick-FFMPEG-V2 Video Processing API
+  description: Internal API contracts for video processing operations
+  version: 1.0.0
+  contact:
+    name: Quick-FFMPEG-V2 Team
+
+paths:
+  /video/load:
+    post:
+      summary: Load and analyze video file
+      description: Loads a video file and extracts metadata
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoadVideoRequest'
+      responses:
+        '200':
+          description: Video file loaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoFile'
+        '400':
+          description: Invalid file path or file not accessible
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal error during file analysis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /video/process:
+    post:
+      summary: Process video with FFmpeg
+      description: Executes FFmpeg command to process video
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProcessVideoRequest'
+      responses:
+        '200':
+          description: Video processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessingResult'
+        '400':
+          description: Invalid processing parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: FFmpeg execution failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /command/build:
+    post:
+      summary: Build FFmpeg command
+      description: Generates FFmpeg command string from parameters
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BuildCommandRequest'
+      responses:
+        '200':
+          description: Command built successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FFmpegCommand'
+        '400':
+          description: Invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /command/preview:
+    post:
+      summary: Get command preview
+      description: Generates preview string for FFmpeg command
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BuildCommandRequest'
+      responses:
+        '200':
+          description: Preview generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandPreview'
+        '400':
+          description: Invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    LoadVideoRequest:
+      type: object
+      required:
+        - filePath
+      properties:
+        filePath:
+          type: string
+          description: Full path to video file
+          example: "C:\Users\John\Videos\sample.mp4"
+
+    VideoFile:
+      type: object
+      required:
+        - filePath
+        - fileName
+        - duration
+        - width
+        - height
+      properties:
+        filePath:
+          type: string
+          description: Full path to video file
+        fileName:
+          type: string
+          description: Name of file without path
+        duration:
+          type: string
+          format: time
+          description: Video duration in ISO 8601 format
+        width:
+          type: integer
+          description: Video width in pixels
+        height:
+          type: integer
+          description: Video height in pixels
+        frameRate:
+          type: number
+          format: double
+          description: Frames per second
+        videoCodec:
+          type: string
+          description: Video codec
+        audioCodec:
+          type: string
+          description: Audio codec
+        fileSize:
+          type: integer
+          format: int64
+          description: File size in bytes
+        lastModified:
+          type: string
+          format: date-time
+          description: File modification timestamp
+
+    ProcessVideoRequest:
+      type: object
+      required:
+        - command
+      properties:
+        command:
+          $ref: '#/components/schemas/FFmpegCommand'
+
+    ProcessingResult:
+      type: object
+      required:
+        - success
+        - processingTime
+      properties:
+        success:
+          type: boolean
+          description: Whether processing completed successfully
+        outputFile:
+          type: string
+          description: Path to output file (null if failed)
+        errorMessage:
+          type: string
+          description: Error message if processing failed
+        processingTime:
+          type: string
+          format: time
+          description: Time taken to process
+        outputFileSize:
+          type: integer
+          format: int64
+          description: Size of output file in bytes
+        exitCode:
+          type: integer
+          description: FFmpeg exit code
+
+    BuildCommandRequest:
+      type: object
+      required:
+        - parameters
+        - videoFile
+      properties:
+        parameters:
+          $ref: '#/components/schemas/ProcessingParameters'
+        videoFile:
+          $ref: '#/components/schemas/VideoFile'
+
+    ProcessingParameters:
+      type: object
+      properties:
+        startTime:
+          type: string
+          format: time
+          description: Start time for trimming
+        endTime:
+          type: string
+          format: time
+          description: End time for trimming
+        cropX:
+          type: integer
+          description: X offset for cropping
+        cropY:
+          type: integer
+          description: Y offset for cropping
+        cropWidth:
+          type: integer
+          description: Width for cropping
+        cropHeight:
+          type: integer
+          description: Height for cropping
+        encodingMode:
+          type: string
+          enum: [Stream, Encoding]
+          description: Processing mode
+        qualityPreset:
+          type: string
+          description: Quality preset name
+        customQuality:
+          type: integer
+          description: Custom quality value
+        outputFormat:
+          type: string
+          description: Output file format
+        outputPath:
+          type: string
+          description: Full path for output file
+
+    FFmpegCommand:
+      type: object
+      required:
+        - commandString
+        - inputFile
+        - outputFile
+        - isValid
+      properties:
+        commandString:
+          type: string
+          description: Complete FFmpeg command line
+        inputFile:
+          type: string
+          description: Input file path
+        outputFile:
+          type: string
+          description: Output file path
+        arguments:
+          type: array
+          items:
+            type: string
+          description: Individual command arguments
+        estimatedDuration:
+          type: string
+          format: time
+          description: Estimated processing time
+        isValid:
+          type: boolean
+          description: Whether command is valid for execution
+
+    CommandPreview:
+      type: object
+      required:
+        - previewString
+        - isValid
+      properties:
+        previewString:
+          type: string
+          description: Formatted command preview
+        isValid:
+          type: boolean
+          description: Whether command is valid
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error type
+        message:
+          type: string
+          description: Human-readable error message
+        details:
+          type: string
+          description: Additional error details

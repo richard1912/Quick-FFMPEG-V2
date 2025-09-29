@@ -1,0 +1,24 @@
+# Quick-FFMPEG-V2 Development Guidelines
+
+Auto-generated from all feature plans. Last updated: 2025-09-29
+
+## Active Technologies
+- C# .NET 8.0 (Windows desktop application) + WPF for GUI, System.Diagnostics for FFmpeg execution, Windows Registry for Send To integration (001-build-an-application)
+
+## Project Structure
+```
+src/
+tests/
+```
+
+## Commands
+# Add commands for C# .NET 8.0 (Windows desktop application)
+
+## Code Style
+C# .NET 8.0 (Windows desktop application): Follow standard conventions
+
+## Recent Changes
+- 001-build-an-application: Added C# .NET 8.0 (Windows desktop application) + WPF for GUI, System.Diagnostics for FFmpeg execution, Windows Registry for Send To integration
+
+<!-- MANUAL ADDITIONS START -->
+<!-- MANUAL ADDITIONS END -->
